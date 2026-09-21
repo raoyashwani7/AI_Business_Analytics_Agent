@@ -1,7 +1,12 @@
 from fastapi import FastAPI
+from pydantic import BaseModel
+
 from database import get_connection
+from agent import ask_agent
 
 app = FastAPI(title="AI Business Analytics API")
+class QuestionRequest(BaseModel):
+    question: str
 
 
 @app.get("/")
@@ -121,3 +126,12 @@ def top_products():
         }
         for row in results
     ]
+@app.post("/ask")
+def ask_business_question(request: QuestionRequest):
+
+    answer = ask_agent(request.question)
+
+    return {
+        "question": request.question,
+        "answer": answer
+    }
