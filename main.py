@@ -1,8 +1,9 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
 
 from database import get_connection
 from agent import ask_agent
+from upload import read_csv_file
 
 app = FastAPI(title="AI Business Analytics API")
 class QuestionRequest(BaseModel):
@@ -135,3 +136,27 @@ def ask_business_question(request: QuestionRequest):
         "question": request.question,
         "answer": answer
     }
+@app.post("/upload-csv")
+async def upload_csv(file: UploadFile = File(...)):
+
+    if not file.filename.endswith(".csv"):
+        raise HTTPException(
+            status_code=400,
+            detail="Only CSV files are allowed"
+        )
+
+    try:
+        df = read_csv_file(file.file)
+
+        return {
+            "message": "CSV uploaded successfully",
+            "filename": file.filename,
+            "rows": len(df),
+            "columns": list(df.columns)
+        }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Could not read CSV: {str(e)}"
+        )
