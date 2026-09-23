@@ -3,7 +3,8 @@ from pydantic import BaseModel
 
 from database import get_connection
 from agent import ask_agent
-from upload import read_csv_file
+from upload import read_csv_file, create_table_from_csv
+
 
 app = FastAPI(title="AI Business Analytics API")
 class QuestionRequest(BaseModel):
@@ -138,7 +139,6 @@ def ask_business_question(request: QuestionRequest):
     }
 @app.post("/upload-csv")
 async def upload_csv(file: UploadFile = File(...)):
-
     if not file.filename.endswith(".csv"):
         raise HTTPException(
             status_code=400,
@@ -148,9 +148,15 @@ async def upload_csv(file: UploadFile = File(...)):
     try:
         df = read_csv_file(file.file)
 
+        table_name = create_table_from_csv(
+            df,
+            file.filename
+        )
+
         return {
-            "message": "CSV uploaded successfully",
+            "message": "CSV uploaded and stored in PostgreSQL",
             "filename": file.filename,
+            "table_name": table_name,
             "rows": len(df),
             "columns": list(df.columns)
         }
@@ -158,5 +164,5 @@ async def upload_csv(file: UploadFile = File(...)):
     except Exception as e:
         raise HTTPException(
             status_code=400,
-            detail=f"Could not read CSV: {str(e)}"
+            detail=f"Could not process CSV: {str(e)}"
         )

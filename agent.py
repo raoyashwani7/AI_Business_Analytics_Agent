@@ -1,3 +1,4 @@
+from rag import search_knowledge
 import os
 from typing import Any
 
@@ -27,7 +28,11 @@ llm = ChatGroq(
 # -----------------------------
 # TOOL 1: Sales Summary
 # -----------------------------
+@tool
+def search_business_knowledge(question: str) -> list[str]:
+    """Search the business knowledge base for relevant business concepts and decision guidelines."""
 
+    return search_knowledge(question)
 @tool
 def get_sales_summary() -> dict:
     """Get total orders, total revenue, total profit and average revenue."""
@@ -163,12 +168,122 @@ def get_top_products() -> list[dict[str, Any]]:
 # -----------------------------
 # Register tools
 # -----------------------------
+@tool
+def get_business_insights() -> list[dict[str, Any]]:
+    """Analyze revenue and profit by region to support business decisions."""
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT
+            region,
+            SUM(revenue) AS total_revenue,
+            SUM(profit) AS total_profit
+        FROM sales
+        GROUP BY region
+        ORDER BY total_revenue DESC;
+    """)
+
+    results = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return [
+        {
+            "region": row[0],
+            "total_revenue": float(row[1]),
+            "total_profit": float(row[2])
+        }
+        for row in results
+    ]
+@tool
+def get_monthly_sales_trend() -> list[dict[str, Any]]:
+    """Get monthly revenue and profit trends."""
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT
+            DATE_TRUNC('month', order_date) AS month,
+            SUM(revenue) AS total_revenue,
+            SUM(profit) AS total_profit
+        FROM sales
+        GROUP BY month
+        ORDER BY month;
+    """)
+
+    results = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return [
+        {
+            "month": str(row[0]),
+            "total_revenue": float(row[1]),
+            "total_profit": float(row[2])
+        }
+        for row in results
+    ]
+
+@tool
+def get_sales_anomalies() -> list[dict[str, Any]]:
+    """Find anomalous sales transactions."""
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
+        SELECT
+            order_id,
+            order_date,
+            customer_name,
+            product,
+            category,
+            region,
+            quantity,
+            revenue,
+            profit,
+            anomaly_flag
+        FROM sales
+        WHERE anomaly_flag IS NOT NULL
+          AND anomaly_flag <> ''
+        ORDER BY revenue DESC;
+    """)
+
+    results = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
+    return [
+        {
+            "order_id": row[0],
+            "order_date": str(row[1]),
+            "customer_name": row[2],
+            "product": row[3],
+            "category": row[4],
+            "region": row[5],
+            "quantity": row[6],
+            "revenue": float(row[7]),
+            "profit": float(row[8]),
+            "anomaly_flag": row[9]
+        }
+        for row in results
+    ]
 
 tools = [
     get_sales_summary,
     get_revenue_by_region,
     get_profit_by_category,
-    get_top_products
+    get_top_products,
+    get_business_insights,
+    get_monthly_sales_trend,
+    get_sales_anomalies,
+    search_business_knowledge
 ]
 
 
@@ -229,7 +344,7 @@ def ask_agent(question: str):
 
 if __name__ == "__main__":
 
-    question = "Show me revenue by region"
+    question = "Give me important business insights from the sales data"
 
     answer = ask_agent(question)
 
