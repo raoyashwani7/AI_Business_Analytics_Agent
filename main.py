@@ -1,3 +1,6 @@
+#redis
+from redis_cache import get_cached_answer, cache_answer
+from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
 
@@ -10,6 +13,7 @@ app = FastAPI(title="AI Business Analytics API")
 class QuestionRequest(BaseModel):
     question: str
 
+app.mount("/dashboard", StaticFiles(directory="static", html=True), name="dashboard")
 
 @app.get("/")
 def home():
@@ -128,15 +132,41 @@ def top_products():
         }
         for row in results
     ]
+# @app.post("/ask")
+# def ask_business_question(request: QuestionRequest):
+
+#     answer = ask_agent(request.question)
+
+#     return {
+#         "question": request.question,
+#         "answer": answer
+#     }
+#after using redis
 @app.post("/ask")
 def ask_business_question(request: QuestionRequest):
 
+    # 1. Check Redis cache
+    cached_answer = get_cached_answer(request.question)
+
+    if cached_answer:
+        return {
+            "question": request.question,
+            "answer": cached_answer,
+            "source": "redis_cache"
+        }
+
+    # 2. Ask AI Agent
     answer = ask_agent(request.question)
+
+    # 3. Store answer in Redis
+    cache_answer(request.question, answer)
 
     return {
         "question": request.question,
-        "answer": answer
+        "answer": answer,
+        "source": "ai_agent"
     }
+
 @app.post("/upload-csv")
 async def upload_csv(file: UploadFile = File(...)):
     if not file.filename.endswith(".csv"):
