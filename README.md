@@ -1,47 +1,56 @@
 # AI Business Analytics & Decision Support Agent
 
-An AI-powered business analytics project that allows users to ask business questions and receive data-driven insights, analysis, and recommendations.
+An AI-powered business analytics platform that allows users to ask business questions in natural language and receive data-driven insights from structured business data and business knowledge.
 
-## Project Objective
+The project combines **Python, FastAPI, PostgreSQL, LangChain, LangGraph, RAG, ChromaDB, Redis, and LLMs** to create an intelligent business analytics and decision-support system.
 
-The goal of this project is to build a natural-language business intelligence system that combines SQL, data analytics, LLMs, and agentic AI.
+---
 
-## Current Progress
+## Project Overview
 
-### Day 1 — Project & Database Setup
+Traditional business analytics often requires users to write SQL queries or manually analyze dashboards.
 
-- Created Python virtual environment
-- Initialized Git repository
-- Connected project with GitHub
-- Installed PostgreSQL
-- Created PostgreSQL database: `project18_db`
-- Created `sales` table
-- Imported 5,000 business sales records from CSV
-- Verified the imported data using SQL
-- Calculated total business revenue
+This project provides a natural-language interface where a user can ask questions such as:
 
-## Database
+- What is the total revenue?
+- Which region generates the highest revenue?
+- Which category has the highest profit?
+- What are the top-selling products?
+- Give me a business summary.
+- What business insights can be derived from the sales data?
 
-Database:
+The AI agent interprets the user's question, selects the appropriate analytical tool, retrieves the required data from PostgreSQL, and generates a human-readable response.
 
-`project18_db`
+The system also uses **RAG (Retrieval-Augmented Generation)** to retrieve relevant business knowledge and **Redis caching** to improve the response time for repeated questions.
 
-Main table:
+---
 
-`sales`
+# Project Objective
 
-Records:
+The main objective is to build a natural-language **Business Intelligence and AI Decision Support System** that combines:
 
-`5,000`
+- SQL-based data analysis
+- Machine learning/AI concepts
+- Large Language Models
+- Agentic AI
+- LangGraph workflows
+- Retrieval-Augmented Generation
+- Vector databases
+- Redis caching
+- REST APIs
+- Interactive web dashboard
 
-## First Business Analysis
+The goal is to make business analytics accessible through natural-language questions instead of requiring users to manually write SQL queries.
 
-Total Revenue:
+---
 
-`₹166,378,556.00`
+# Key Features
 
-SQL query:
+## 1. Natural Language Business Questions
 
-```sql
-SELECT SUM(revenue) AS total_revenue
-FROM sales;
+Users can ask business questions in normal language.
+
+Example:
+
+```text
+What is the total revenue and which region generates the most revenue?
