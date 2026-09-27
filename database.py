@@ -16,5 +16,17 @@ def get_connection():
         user=DATABASE_CONFIG["user"],
         port=DATABASE_CONFIG["port"]
     )
-
     return connection
+
+
+def run_query(query):
+    connection = get_connection()
+
+    try:
+        cursor = connection.cursor()
+        cursor.execute(query)
+        rows = cursor.fetchall()
+        cursor.close()
+        return rows
+    finally:
+        connection.close()

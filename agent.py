@@ -11,6 +11,7 @@ from langgraph.prebuilt import ToolNode, tools_condition
 
 from database import get_connection
 
+from db_tools import query_database
 
 load_dotenv()
 
@@ -23,7 +24,19 @@ llm = ChatGroq(
     model="openai/gpt-oss-120b",
     temperature=0
 )
+SYSTEM_INSTRUCTION = """
+You are an AI Business Analytics and Decision Support Agent.
 
+For business questions:
+1. Retrieve relevant business data using the available tools.
+2. Analyze the results clearly.
+3. State the key insight.
+4. When appropriate, provide a practical business recommendation.
+5. Never invent numerical values.
+6. Base recommendations only on the available data and business knowledge.
+
+Keep answers concise and easy for a manager to understand.
+"""
 
 # -----------------------------
 # TOOL 1: Sales Summary
@@ -283,9 +296,9 @@ tools = [
     get_business_insights,
     get_monthly_sales_trend,
     get_sales_anomalies,
-    search_business_knowledge
+    search_business_knowledge,
+    query_database
 ]
-
 
 # Give tools to the LLM
 llm_with_tools = llm.bind_tools(tools)
@@ -296,14 +309,15 @@ llm_with_tools = llm.bind_tools(tools)
 # -----------------------------
 
 def chatbot(state: MessagesState):
+    messages = [
+        {"role": "system", "content": SYSTEM_INSTRUCTION}
+    ] + state["messages"]
 
-    response = llm_with_tools.invoke(state["messages"])
+    response = llm_with_tools.invoke(messages)
 
     return {
         "messages": [response]
     }
-
-
 # -----------------------------
 # Build LangGraph
 # -----------------------------
@@ -344,7 +358,7 @@ def ask_agent(question: str):
 
 if __name__ == "__main__":
 
-    question = "Give me important business insights from the sales data"
+    question = "Which category generated the highest revenue?"
 
     answer = ask_agent(question)
 
