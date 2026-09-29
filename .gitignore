@@ -5,3 +5,4 @@ __pycache__/
 .DS_Store
 chroma_db/
 dump.rdb
+project18_db_backup.sql
