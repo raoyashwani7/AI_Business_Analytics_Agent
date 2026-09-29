@@ -1,4 +1,3 @@
-from rag import search_knowledge
 import os
 from typing import Any
 
@@ -41,11 +40,7 @@ Keep answers concise and easy for a manager to understand.
 # -----------------------------
 # TOOL 1: Sales Summary
 # -----------------------------
-@tool
-def search_business_knowledge(question: str) -> list[str]:
-    """Search the business knowledge base for relevant business concepts and decision guidelines."""
 
-    return search_knowledge(question)
 @tool
 def get_sales_summary() -> dict:
     """Get total orders, total revenue, total profit and average revenue."""
@@ -296,7 +291,6 @@ tools = [
     get_business_insights,
     get_monthly_sales_trend,
     get_sales_anomalies,
-    search_business_knowledge,
     query_database
 ]
 
