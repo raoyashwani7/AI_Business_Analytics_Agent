@@ -303,9 +303,10 @@ llm_with_tools = llm.bind_tools(tools)
 # -----------------------------
 
 def chatbot(state: MessagesState):
+
     messages = [
         {"role": "system", "content": SYSTEM_INSTRUCTION}
-    ] + state["messages"]
+    ] + state["messages"][-6:]
 
     response = llm_with_tools.invoke(messages)
 
