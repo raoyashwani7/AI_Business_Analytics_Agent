@@ -6,9 +6,6 @@ from database import get_connection
 def query_database(sql: str) -> str:
     """
     Execute a SQL query on the PostgreSQL business database.
-
-    Use this tool when the user asks a question that requires
-    business data.
     """
 
     try:
@@ -16,7 +13,7 @@ def query_database(sql: str) -> str:
         cursor = connection.cursor()
 
         cursor.execute(sql)
-        rows = cursor.fetchall()
+        rows = cursor.fetchmany(20)
 
         cursor.close()
         connection.close()
@@ -24,10 +21,15 @@ def query_database(sql: str) -> str:
         if not rows:
             return "No data found."
 
-        return "\n".join(
+        result = "\n".join(
             str(tuple(row))
             for row in rows
         )
+
+        if len(result) > 4000:
+            result = result[:4000] + "\n...[result truncated]"
+
+        return result
 
     except Exception as e:
         return f"Database error: {str(e)}"

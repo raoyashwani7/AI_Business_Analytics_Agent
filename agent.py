@@ -237,13 +237,27 @@ def get_monthly_sales_trend() -> list[dict[str, Any]]:
         for row in results
     ]
 
+# -----------------------------
+# TOOL 7: Sales Anomalies (Optimized to prevent token overflow)
+# -----------------------------
+
 @tool
-def get_sales_anomalies() -> list[dict[str, Any]]:
-    """Find anomalous sales transactions."""
+def get_sales_anomalies() -> dict[str, Any]:
+    """Find a summary and a list of the top anomalous sales transactions."""
 
     connection = get_connection()
     cursor = connection.cursor()
 
+    # 1. Fetch total count of anomalies first
+    cursor.execute("""
+        SELECT COUNT(*) 
+        FROM sales 
+        WHERE anomaly_flag IS NOT NULL 
+          AND anomaly_flag <> '';
+    """)
+    total_anomalies = cursor.fetchone()[0]
+
+    # 2. Fetch only the top 20 most impactful anomalies to save token space
     cursor.execute("""
         SELECT
             order_id,
@@ -259,7 +273,8 @@ def get_sales_anomalies() -> list[dict[str, Any]]:
         FROM sales
         WHERE anomaly_flag IS NOT NULL
           AND anomaly_flag <> ''
-        ORDER BY revenue DESC;
+        ORDER BY revenue DESC
+        LIMIT 20;
     """)
 
     results = cursor.fetchall()
@@ -267,7 +282,7 @@ def get_sales_anomalies() -> list[dict[str, Any]]:
     cursor.close()
     connection.close()
 
-    return [
+    top_anomalies_list = [
         {
             "order_id": row[0],
             "order_date": str(row[1]),
@@ -282,6 +297,14 @@ def get_sales_anomalies() -> list[dict[str, Any]]:
         }
         for row in results
     ]
+
+    # Return a structured dict containing both the total scope and the preview data
+    return {
+        "total_anomalies_found": total_anomalies,
+        "note": "Showing the top 20 most severe anomalies by revenue to optimize analysis.",
+        "top_anomalies": top_anomalies_list
+    }
+
 
 tools = [
     get_sales_summary,
@@ -303,10 +326,9 @@ llm_with_tools = llm.bind_tools(tools)
 # -----------------------------
 
 def chatbot(state: MessagesState):
-
     messages = [
         {"role": "system", "content": SYSTEM_INSTRUCTION}
-    ] + state["messages"][-6:]
+    ] + state["messages"]
 
     response = llm_with_tools.invoke(messages)
 
