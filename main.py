@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from pydantic import BaseModel
 
-from database import get_connection, run_query
+from database import get_connection
 from agent import ask_agent
 from upload import read_csv_file, create_table_from_csv
 
@@ -198,7 +198,11 @@ async def upload_csv(file: UploadFile = File(...)):
         )
 @app.get("/datasets")
 def get_datasets():
-    rows = run_query("""
+
+    connection = get_connection()
+    cursor = connection.cursor()
+
+    cursor.execute("""
         SELECT table_name
         FROM information_schema.tables
         WHERE table_schema = 'public'
@@ -206,6 +210,11 @@ def get_datasets():
         ORDER BY table_name;
     """)
 
+    results = cursor.fetchall()
+
+    cursor.close()
+    connection.close()
+
     return {
-        "datasets": [row[0] for row in rows]
+        "datasets": [row[0] for row in results]
     }
