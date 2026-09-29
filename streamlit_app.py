@@ -12,6 +12,25 @@ API_URL = "http://127.0.0.1:8000"
 st.title("🤖 AI Business Analytics Dashboard")
 st.caption("AI-powered business intelligence and decision support")
 
+
+
+st.divider()
+st.subheader("📂 Select Dataset")
+
+dataset_response = requests.get(f"{API_URL}/datasets")
+
+if dataset_response.status_code == 200:
+
+    datasets = dataset_response.json()["datasets"]
+
+    selected_dataset = st.selectbox(
+        "Choose the dataset you want to analyze:",
+        datasets
+    )
+
+else:
+    st.error("Could not load datasets.")
+    selected_dataset = None
 # -----------------------------
 # KPI SECTION
 # -----------------------------
